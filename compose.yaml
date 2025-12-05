@@ -6,13 +6,15 @@
 services:
   web:
     image: nginx
+    container_name: esmero-web
     ports:
       - 8001:80
     volumes:
       - archipelago-nfs-location/nginxconfigford8/default.conf:/etc/nginx/conf.d/default.conf
       - archipelago-nfs-location:/var/www/html
   php:
-    image: "esmero/php-8.3-fpm:1.5.0-multiarch"
+    image: esmero/php-8.3-fpm:1.5.0-multiarch
+    container_name: esmero-php
     environment:
       MYSQL_HOSTNAME: "mysql-db-host"
       MYSQL_PORT: 3306
@@ -23,6 +25,7 @@ services:
       - archipelago-nfs-location:/var/www/html
   solr:
     image: solr:9.10.0
+    container_name: esmero-solr
     environment:
       SOLR_HEAP: 512m
       SOLR_OPTS: -Dsolr.jetty.request.header.size=65535 -Dsolr.install.dir=/opt/solr
@@ -30,18 +33,21 @@ services:
     ports:
       - 8983:8983
     volumes:
-      archipelago-solr-pv/data:/var/solr/data
-      archipelago-pv/persistent/solrconfig:/drupalconfig
+      archipelago-nfs-location/persistent/solrcore:/var/solr/data
+      archipelago-nfs-location/persistent/solrconfig:/drupalconfig
+      archipelago-nfs-location/persistent/solrlib:/var/solr/data/lib
     entrypoint:
       - solr-precreate
       - drupal
       - /drupalconfig
   nlp:
     image: esmero/esmero-nlp:1.4.2-fasttext-multiarch
+    container_name: esmero-nlp
     ports:
       - 6400:6400
   iiif:
     image: esmero/cantaloupe-s3:6.0.5-noturbojpeg-multiarch
+    container_name: esmero-cantaloupe
     environment:
       XMX: 2g
       XMS: 256m
@@ -53,8 +59,9 @@ services:
       - archipelago-nfs-location/persistent/iiifcache:/var/cache/cantaloupe
   minio:
     image: minio/minio:latest
+    container_name: esmero-minio
     volumes:
-         - archipelago-nfs-location/persistent/miniodata:/data:cached
+         - archipelago-nfs-location/persistent/miniodata:/data
     ports:
       - 9000:9000
       - 9001:9001
